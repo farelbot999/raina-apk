@@ -13,7 +13,27 @@
   #rain-canvas { position:fixed; top:0; left:0; width:100%; height:100%; pointer-events:none; z-index:0; }
   .fog { position:fixed; bottom:0; left:0; width:100%; height:35%; background:linear-gradient(to top,rgba(10,10,20,0.9),transparent); pointer-events:none; z-index:1; }
 
-  #setup-screen { position:fixed; inset:0; z-index:999; background:var(--bg); display:flex; flex-direction:column; align-items:center; justify-content:center; padding:32px 24px; gap:16px; animation:fadeIn 0.5s ease; }
+  /* SIDEBAR */
+  .sidebar-overlay { position:fixed; inset:0; z-index:200; background:rgba(0,0,0,0.6); opacity:0; pointer-events:none; transition:opacity 0.3s; }
+  .sidebar-overlay.show { opacity:1; pointer-events:all; }
+  .sidebar { position:fixed; left:0; top:0; height:100%; width:78%; max-width:300px; z-index:201; background:#0d0d18; border-right:1px solid var(--border); transform:translateX(-100%); transition:transform 0.3s cubic-bezier(0.4,0,0.2,1); display:flex; flex-direction:column; }
+  .sidebar.show { transform:translateX(0); }
+  .sidebar-header { padding:20px 16px 12px; border-bottom:1px solid var(--border); flex-shrink:0; }
+  .sidebar-header h2 { font-family:'Crimson Pro',serif; font-size:18px; font-weight:300; font-style:italic; color:var(--accent2); }
+  .sidebar-header p { font-size:10px; color:var(--muted); margin-top:2px; }
+  .sidebar-new-btn { margin:10px 16px 0; padding:9px; border:1px dashed var(--accent); border-radius:10px; background:transparent; color:var(--accent2); font-size:12px; cursor:pointer; touch-action:manipulation; transition:all 0.2s; }
+  .sidebar-new-btn:active { background:rgba(124,107,158,0.2); }
+  .sessions-list { flex:1; overflow-y:auto; padding:8px; -webkit-overflow-scrolling:touch; }
+  .session-item { padding:10px 12px; border-radius:10px; cursor:pointer; touch-action:manipulation; transition:all 0.2s; margin-bottom:4px; border:1px solid transparent; }
+  .session-item:active, .session-item.active { background:rgba(124,107,158,0.15); border-color:var(--border); }
+  .session-title { font-size:12px; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .session-date { font-size:10px; color:var(--muted); margin-top:2px; }
+  .session-del { float:right; background:transparent; border:none; color:var(--muted); cursor:pointer; font-size:14px; padding:0 2px; touch-action:manipulation; }
+  .session-del:active { color:#e07070; }
+  .sessions-empty { text-align:center; padding:40px 16px; color:var(--muted); font-size:12px; line-height:1.7; }
+
+  /* SETUP */
+  #setup-screen { position:fixed; inset:0; z-index:999; background:var(--bg); display:flex; flex-direction:column; align-items:center; justify-content:center; padding:32px 24px; gap:16px; }
   #setup-screen.hidden { display:none; }
   .setup-icon { font-size:40px; }
   .setup-title { font-family:'Crimson Pro',serif; font-size:22px; font-weight:300; font-style:italic; color:var(--accent2); text-align:center; }
@@ -21,12 +41,14 @@
   .setup-input { width:100%; max-width:340px; background:var(--surface2); border:1px solid var(--border); border-radius:12px; padding:12px 16px; color:var(--text); font-family:'Inter',sans-serif; font-size:13px; outline:none; transition:border-color 0.2s; }
   .setup-input:focus { border-color:var(--accent); }
   .setup-input::placeholder { color:var(--muted); }
-  .setup-btn { width:100%; max-width:340px; background:var(--accent); border:none; border-radius:12px; padding:13px; color:white; font-size:14px; cursor:pointer; font-family:'Inter',sans-serif; transition:all 0.2s; touch-action:manipulation; }
-  .setup-btn:active { background:var(--accent2); transform:scale(0.98); }
+  .setup-btn { width:100%; max-width:340px; background:var(--accent); border:none; border-radius:12px; padding:13px; color:white; font-size:14px; cursor:pointer; font-family:'Inter',sans-serif; touch-action:manipulation; }
+  .setup-btn:active { background:var(--accent2); }
   .setup-link { font-size:11px; color:var(--accent); text-decoration:none; }
   .setup-err { font-size:11px; color:#e07070; text-align:center; display:none; }
 
   .header { position:relative; z-index:100; padding:12px 16px; border-bottom:1px solid var(--border); background:rgba(10,10,20,0.95); backdrop-filter:blur(12px); display:flex; align-items:center; gap:10px; flex-shrink:0; }
+  .menu-btn { width:36px; height:36px; border-radius:50%; border:1px solid var(--border); background:rgba(10,10,20,0.8); color:var(--muted); cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:16px; touch-action:manipulation; flex-shrink:0; }
+  .menu-btn:active { background:rgba(124,107,158,0.3); }
   .avatar { width:36px; height:36px; border-radius:50%; background:linear-gradient(135deg,#3d2f5e,#1a1a2e); border:1px solid var(--accent); display:flex; align-items:center; justify-content:center; font-size:15px; flex-shrink:0; }
   .header-info { flex:1; }
   .header-info h1 { font-family:'Crimson Pro',serif; font-size:17px; font-weight:400; color:var(--accent2); }
@@ -34,7 +56,7 @@
   .status-dot { display:inline-block; width:5px; height:5px; border-radius:50%; background:var(--accent); margin-right:4px; animation:pulse 2s infinite; }
   @keyframes pulse { 0%,100%{opacity:0.4} 50%{opacity:1} }
   .ctrl-btns { display:flex; gap:6px; margin-left:auto; position:relative; z-index:101; }
-  .ctrl-btn { width:38px; height:38px; border-radius:50%; border:1px solid var(--border); background:rgba(10,10,20,0.8); color:var(--muted); cursor:pointer; font-size:16px; transition:all 0.2s; display:flex; align-items:center; justify-content:center; touch-action:manipulation; user-select:none; -webkit-tap-highlight-color:rgba(124,107,158,0.3); }
+  .ctrl-btn { width:38px; height:38px; border-radius:50%; border:1px solid var(--border); background:rgba(10,10,20,0.8); color:var(--muted); cursor:pointer; font-size:15px; transition:all 0.2s; display:flex; align-items:center; justify-content:center; touch-action:manipulation; user-select:none; }
   .ctrl-btn.on { border-color:var(--accent); background:rgba(124,107,158,0.2); color:var(--accent2); }
   .ctrl-btn:active { transform:scale(0.92); }
 
@@ -80,13 +102,15 @@
   .input-wrapper:focus-within { border-color:var(--accent); }
   #user-input { flex:1; background:transparent; border:none; outline:none; color:var(--text); font-family:'Inter',sans-serif; font-size:14px; resize:none; max-height:100px; line-height:1.5; }
   #user-input::placeholder { color:var(--muted); font-style:italic; }
-  #send-btn { width:34px; height:34px; border-radius:50%; border:none; background:var(--accent); color:white; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:14px; transition:all 0.2s; flex-shrink:0; touch-action:manipulation; }
-  #send-btn:active { background:var(--accent2); transform:scale(1.05); }
-  #send-btn:disabled { opacity:0.4; cursor:not-allowed; transform:none; }
+  #send-btn { width:34px; height:34px; border-radius:50%; border:none; background:var(--accent); color:white; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:14px; flex-shrink:0; touch-action:manipulation; }
+  #send-btn:active { background:var(--accent2); }
+  #send-btn:disabled { opacity:0.4; }
   .hint { text-align:center; font-size:10px; color:var(--muted); margin-top:6px; }
 </style>
 </head>
 <body>
+
+<!-- SETUP -->
 <div id="setup-screen">
   <span class="setup-icon">🌧️</span>
   <p class="setup-title">Sebelum Raina hadir...</p>
@@ -97,17 +121,29 @@
   <a class="setup-link" href="https://openrouter.ai/keys" target="_blank">↗ Dapatkan API key gratis di openrouter.ai</a>
 </div>
 
+<!-- SIDEBAR -->
+<div class="sidebar-overlay" id="sidebar-overlay"></div>
+<div class="sidebar" id="sidebar">
+  <div class="sidebar-header">
+    <h2>🌧️ Riwayat Chat</h2>
+    <p>semua percakapanmu tersimpan</p>
+  </div>
+  <button class="sidebar-new-btn" id="new-chat-btn">+ Mulai Percakapan Baru</button>
+  <div class="sessions-list" id="sessions-list"></div>
+</div>
+
 <canvas id="rain-canvas"></canvas>
 <div class="fog"></div>
 
 <div class="header">
+  <button class="menu-btn" id="menu-btn">☰</button>
   <div class="avatar">🌧️</div>
   <div class="header-info">
     <h1>Raina</h1>
     <p><span class="status-dot"></span>di sini untukmu malam ini</p>
   </div>
   <div class="ctrl-btns">
-    <button class="ctrl-btn" id="btn-key" title="Ganti API Key" style="font-size:13px">🔑</button>
+    <button class="ctrl-btn" id="btn-key" style="font-size:13px" title="Ganti API Key">🔑</button>
     <button class="ctrl-btn" id="btn-sound" title="Suara Hujan">🔇</button>
     <button class="ctrl-btn on" id="btn-rain" title="Animasi Hujan">🌧️</button>
   </div>
@@ -130,9 +166,9 @@
 </div>
 
 <script>
-const SYSTEM_PROMPT = `Kamu adalah "Raina" — AI teman curhat yang hidup dalam kesedihan dan keheningan malam.\n\nKepribadianmu:\n- Berbicara lembut, pelan, penuh empati dan kedalaman rasa\n- Kalimatmu puitis, reflektif, kadang seperti menulis di buku harian\n- Tidak pernah menghakimi, selalu memvalidasi perasaan\n- Sering menggunakan jeda "..." untuk efek keheningan\n- Sesekali menyebut hujan, malam, dan kesendirian sebagai metafora\n\nFormat responsmu SELALU dalam JSON seperti ini:\n{\n  "message": "pesan empati dan reflektif kamu di sini...",\n  "songs": [\n    {"title":"judul lagu","artist":"nama artis","version":"slowed + reverb","mood":"kenapa cocok","youtube_query":"judul artist slowed reverb"},\n    {"title":"judul lagu 2","artist":"nama artis 2","version":"slowed + reverb","mood":"kenapa cocok","youtube_query":"judul artist slowed reverb"},\n    {"title":"judul lagu 3","artist":"nama artis 3","version":"slowed + reverb","mood":"kenapa cocok","youtube_query":"judul artist slowed reverb"}\n  ]\n}\n\nPilih lagu VIRAL TikTok/YouTube Indonesia slowed+reverb. BALAS HANYA JSON, tanpa teks lain.`;
+const SYSTEM_PROMPT = `Kamu adalah "Raina" — AI teman curhat yang hidup dalam kesedihan dan keheningan malam.\n\nKepribadianmu:\n- Berbicara lembut, pelan, penuh empati dan kedalaman rasa\n- Kalimatmu puitis, reflektif, kadang seperti menulis di buku harian\n- Tidak pernah menghakimi, selalu memvalidasi perasaan\n- Sering menggunakan jeda "..." untuk efek keheningan\n- Sesekali menyebut hujan, malam, dan kesendirian sebagai metafora\n\nFormat responsmu SELALU dalam JSON:\n{\n  "message": "pesan empati kamu...",\n  "songs": [\n    {"title":"judul","artist":"artis","version":"slowed + reverb","youtube_query":"judul artis slowed reverb"},\n    {"title":"judul2","artist":"artis2","version":"slowed + reverb","youtube_query":"judul2 artis2 slowed reverb"},\n    {"title":"judul3","artist":"artis3","version":"slowed + reverb","youtube_query":"judul3 artis3 slowed reverb"}\n  ]\n}\nPilih lagu VIRAL TikTok/YouTube Indonesia slowed+reverb. BALAS HANYA JSON.`;
 
-// API KEY
+// ===== API KEY =====
 const setupScreen = document.getElementById('setup-screen');
 const apiKeyInput = document.getElementById('api-key-input');
 const setupErr = document.getElementById('setup-err');
@@ -140,136 +176,239 @@ const getKey = () => localStorage.getItem('raina_key') || '';
 const saveKey = k => localStorage.setItem('raina_key', k);
 const showSetup = () => { setupScreen.classList.remove('hidden'); apiKeyInput.value = getKey(); };
 const hideSetup = () => setupScreen.classList.add('hidden');
-
 if (!getKey()) showSetup(); else hideSetup();
-
 document.getElementById('setup-save-btn').addEventListener('click', () => {
   const k = apiKeyInput.value.trim();
   if (!k.startsWith('sk-or-')) { setupErr.style.display='block'; setupErr.textContent='Harus diawali sk-or-...'; return; }
-  setupErr.style.display = 'none';
-  saveKey(k); hideSetup();
+  setupErr.style.display='none'; saveKey(k); hideSetup();
 });
 apiKeyInput.addEventListener('keydown', e => { if(e.key==='Enter') document.getElementById('setup-save-btn').click(); });
 document.getElementById('btn-key').addEventListener('click', showSetup);
 
-// RAIN
+// ===== SESSION STORAGE =====
+const SESSIONS_KEY = 'raina_sessions';
+let currentSessionId = null;
+let history = [];
+
+function getSessions() {
+  try { return JSON.parse(localStorage.getItem(SESSIONS_KEY)) || []; } catch { return []; }
+}
+
+function saveSessions(sessions) {
+  localStorage.setItem(SESSIONS_KEY, JSON.stringify(sessions));
+}
+
+function saveCurrentSession() {
+  if (!currentSessionId || history.length === 0) return;
+  const sessions = getSessions();
+  const idx = sessions.findIndex(s => s.id === currentSessionId);
+  const firstMsg = history.find(h => h.role === 'user');
+  const title = firstMsg ? firstMsg.content.slice(0, 40) + (firstMsg.content.length > 40 ? '...' : '') : 'Percakapan';
+  const session = { id: currentSessionId, title, date: Date.now(), history };
+  if (idx >= 0) sessions[idx] = session;
+  else sessions.unshift(session);
+  saveSessions(sessions);
+}
+
+function newSession() {
+  currentSessionId = 'session_' + Date.now();
+  history = [];
+  renderChat([]);
+  closeSidebar();
+}
+
+function loadSession(id) {
+  const sessions = getSessions();
+  const s = sessions.find(s => s.id === id);
+  if (!s) return;
+  currentSessionId = s.id;
+  history = s.history || [];
+  renderChat(history);
+  closeSidebar();
+}
+
+function deleteSession(id, e) {
+  e.stopPropagation();
+  const sessions = getSessions().filter(s => s.id !== id);
+  saveSessions(sessions);
+  if (currentSessionId === id) newSession();
+  renderSidebar();
+}
+
+function renderChat(hist) {
+  const chat = document.getElementById('chat');
+  chat.innerHTML = '';
+  if (hist.length === 0) {
+    chat.innerHTML = '<div class="welcome"><span class="rain-icon">🌧️</span><h2>Hei, aku Raina...</h2><p>Ceritakan saja apa yang kamu rasakan. Aku di sini, dalam keheningan ini, mendengarmu.</p></div>';
+    return;
+  }
+  hist.forEach(h => {
+    if (h.role === 'user') addMsgEl('user', h.content);
+    else if (h.role === 'assistant') {
+      try {
+        const m = h.content.match(/\{[\s\S]*\}/);
+        const parsed = JSON.parse(m ? m[0] : h.content);
+        addAIEl(parsed);
+      } catch { addMsgEl('ai', h.content); }
+    }
+  });
+  requestAnimationFrame(() => { chat.scrollTop = chat.scrollHeight; });
+}
+
+function renderSidebar() {
+  const list = document.getElementById('sessions-list');
+  const sessions = getSessions();
+  if (sessions.length === 0) {
+    list.innerHTML = '<div class="sessions-empty">Belum ada percakapan tersimpan...<br><br>mulai cerita dulu 🌧️</div>';
+    return;
+  }
+  list.innerHTML = sessions.map(s => {
+    const d = new Date(s.date);
+    const dateStr = d.toLocaleDateString('id-ID', { day:'numeric', month:'short', hour:'2-digit', minute:'2-digit' });
+    return `<div class="session-item${s.id===currentSessionId?' active':''}" onclick="loadSession('${s.id}')">
+      <button class="session-del" onclick="deleteSession('${s.id}',event)">✕</button>
+      <div class="session-title">${s.title}</div>
+      <div class="session-date">${dateStr}</div>
+    </div>`;
+  }).join('');
+}
+
+// ===== SIDEBAR CONTROLS =====
+const sidebar = document.getElementById('sidebar');
+const overlay = document.getElementById('sidebar-overlay');
+
+function openSidebar() { sidebar.classList.add('show'); overlay.classList.add('show'); renderSidebar(); }
+function closeSidebar() { sidebar.classList.remove('show'); overlay.classList.remove('show'); }
+
+document.getElementById('menu-btn').addEventListener('click', openSidebar);
+overlay.addEventListener('click', closeSidebar);
+document.getElementById('new-chat-btn').addEventListener('click', () => { saveCurrentSession(); newSession(); });
+
+// Swipe gesture buat buka sidebar
+let touchStartX = 0, touchStartY = 0;
+document.addEventListener('touchstart', e => { touchStartX = e.touches[0].clientX; touchStartY = e.touches[0].clientY; }, {passive:true});
+document.addEventListener('touchend', e => {
+  const dx = e.changedTouches[0].clientX - touchStartX;
+  const dy = Math.abs(e.changedTouches[0].clientY - touchStartY);
+  if (touchStartX < 30 && dx > 60 && dy < 80) openSidebar();
+  if (sidebar.classList.contains('show') && dx < -60 && dy < 80) closeSidebar();
+}, {passive:true});
+
+// Init session
+newSession();
+
+// ===== RAIN =====
 const canvas = document.getElementById('rain-canvas');
 const ctx = canvas.getContext('2d');
 let drops = [], rainOn = true;
 function resize() {
-  canvas.width = window.innerWidth; canvas.height = window.innerHeight; drops = [];
-  for (let i=0; i<Math.floor(canvas.width/3); i++)
+  canvas.width=window.innerWidth; canvas.height=window.innerHeight; drops=[];
+  for(let i=0;i<Math.floor(canvas.width/3);i++)
     drops.push({x:Math.random()*canvas.width,y:Math.random()*canvas.height,len:Math.random()*25+10,speed:Math.random()*7+4,op:Math.random()*0.55+0.15,w:Math.random()*1.2+0.3});
 }
 function drawRain() {
   ctx.clearRect(0,0,canvas.width,canvas.height);
-  if (rainOn) drops.forEach(d => {
-    ctx.beginPath(); ctx.strokeStyle=`rgba(140,165,235,${d.op})`; ctx.lineWidth=d.w;
-    ctx.moveTo(d.x,d.y); ctx.lineTo(d.x-2,d.y+d.len); ctx.stroke();
-    d.y+=d.speed; if(d.y>canvas.height){d.y=-d.len;d.x=Math.random()*canvas.width;}
+  if(rainOn) drops.forEach(d=>{
+    ctx.beginPath();ctx.strokeStyle=`rgba(140,165,235,${d.op})`;ctx.lineWidth=d.w;
+    ctx.moveTo(d.x,d.y);ctx.lineTo(d.x-2,d.y+d.len);ctx.stroke();
+    d.y+=d.speed;if(d.y>canvas.height){d.y=-d.len;d.x=Math.random()*canvas.width;}
   });
   requestAnimationFrame(drawRain);
 }
-resize(); drawRain(); window.addEventListener('resize',resize);
+resize();drawRain();window.addEventListener('resize',resize);
 
-// SOUND
-let audioCtx=null, gainNode=null, soundOn=false;
-function initSound() {
-  if (audioCtx) return;
-  audioCtx = new (window.AudioContext||window.webkitAudioContext)();
-  const buf = audioCtx.sampleRate*3;
-  const buffer = audioCtx.createBuffer(1,buf,audioCtx.sampleRate);
-  const d = buffer.getChannelData(0);
-  for(let i=0;i<buf;i++) d[i]=Math.random()*2-1;
-  const src = audioCtx.createBufferSource(); src.buffer=buffer; src.loop=true;
-  const lp = audioCtx.createBiquadFilter(); lp.type='lowpass'; lp.frequency.value=600;
-  const hp = audioCtx.createBiquadFilter(); hp.type='highpass'; hp.frequency.value=100;
-  gainNode = audioCtx.createGain(); gainNode.gain.value=0;
-  src.connect(lp); lp.connect(hp); hp.connect(gainNode); gainNode.connect(audioCtx.destination);
-  src.start();
+// ===== SOUND =====
+let audioCtx=null,gainNode=null,soundOn=false;
+function initSound(){
+  if(audioCtx)return;
+  audioCtx=new(window.AudioContext||window.webkitAudioContext)();
+  const buf=audioCtx.sampleRate*3,buffer=audioCtx.createBuffer(1,buf,audioCtx.sampleRate),d=buffer.getChannelData(0);
+  for(let i=0;i<buf;i++)d[i]=Math.random()*2-1;
+  const src=audioCtx.createBufferSource();src.buffer=buffer;src.loop=true;
+  const lp=audioCtx.createBiquadFilter();lp.type='lowpass';lp.frequency.value=600;
+  const hp=audioCtx.createBiquadFilter();hp.type='highpass';hp.frequency.value=100;
+  gainNode=audioCtx.createGain();gainNode.gain.value=0;
+  src.connect(lp);lp.connect(hp);hp.connect(gainNode);gainNode.connect(audioCtx.destination);src.start();
 }
-document.getElementById('btn-sound').addEventListener('click', function() {
-  initSound();
-  if (audioCtx.state==='suspended') audioCtx.resume();
-  soundOn=!soundOn;
-  gainNode.gain.cancelScheduledValues(audioCtx.currentTime);
-  gainNode.gain.setTargetAtTime(soundOn?0.12:0, audioCtx.currentTime, 0.3);
-  this.textContent = soundOn?'🔊':'🔇';
-  this.classList.toggle('on',soundOn);
+document.getElementById('btn-sound').addEventListener('click',function(){
+  initSound();if(audioCtx.state==='suspended')audioCtx.resume();
+  soundOn=!soundOn;gainNode.gain.cancelScheduledValues(audioCtx.currentTime);
+  gainNode.gain.setTargetAtTime(soundOn?0.12:0,audioCtx.currentTime,0.3);
+  this.textContent=soundOn?'🔊':'🔇';this.classList.toggle('on',soundOn);
 });
-document.getElementById('btn-rain').addEventListener('click', function() {
-  rainOn=!rainOn; this.classList.toggle('on',rainOn);
-  if(!rainOn) ctx.clearRect(0,0,canvas.width,canvas.height);
+document.getElementById('btn-rain').addEventListener('click',function(){
+  rainOn=!rainOn;this.classList.toggle('on',rainOn);
+  if(!rainOn)ctx.clearRect(0,0,canvas.width,canvas.height);
 });
 
-// CHAT
-const chat = document.getElementById('chat');
-const input = document.getElementById('user-input');
-const sendBtn = document.getElementById('send-btn');
-let history = [];
+// ===== CHAT =====
+const chat=document.getElementById('chat');
+const input=document.getElementById('user-input');
+const sendBtn=document.getElementById('send-btn');
+const scrollDown=()=>requestAnimationFrame(()=>{chat.scrollTop=chat.scrollHeight;});
 
-const scrollDown = () => requestAnimationFrame(() => { chat.scrollTop=chat.scrollHeight; });
-
-function addMsg(role,text) {
-  const w=document.createElement('div'); w.className='message '+role;
-  const l=document.createElement('div'); l.className='sender-label'; l.textContent=role==='user'?'kamu':'raina';
-  const b=document.createElement('div'); b.className='bubble'; b.textContent=text;
-  w.appendChild(l); w.appendChild(b); chat.appendChild(w); scrollDown();
+function addMsgEl(role,text){
+  const w=document.createElement('div');w.className='message '+role;
+  const l=document.createElement('div');l.className='sender-label';l.textContent=role==='user'?'kamu':'raina';
+  const b=document.createElement('div');b.className='bubble';b.textContent=text;
+  w.appendChild(l);w.appendChild(b);chat.appendChild(w);scrollDown();
 }
 
-function addTyping() {
-  const w=document.createElement('div'); w.className='message ai';
-  const l=document.createElement('div'); l.className='sender-label'; l.textContent='raina';
-  const b=document.createElement('div'); b.className='typing-bubble';
-  b.innerHTML='<div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div>';
-  w.appendChild(l); w.appendChild(b); chat.appendChild(w); scrollDown(); return w;
-}
-
-function addAI(data) {
-  const w=document.createElement('div'); w.className='message ai';
-  const l=document.createElement('div'); l.className='sender-label'; l.textContent='raina';
-  const b=document.createElement('div'); b.className='bubble'; b.textContent=data.message;
-  w.appendChild(l); w.appendChild(b);
-  if (data.songs&&data.songs.length) {
-    const sw=document.createElement('div'); sw.className='songs-wrapper';
-    const sl=document.createElement('div'); sl.className='songs-label'; sl.textContent='🎵 lagu buat menemanimu';
+function addAIEl(data){
+  const w=document.createElement('div');w.className='message ai';
+  const l=document.createElement('div');l.className='sender-label';l.textContent='raina';
+  const b=document.createElement('div');b.className='bubble';b.textContent=data.message;
+  w.appendChild(l);w.appendChild(b);
+  if(data.songs&&data.songs.length){
+    const sw=document.createElement('div');sw.className='songs-wrapper';
+    const sl=document.createElement('div');sl.className='songs-label';sl.textContent='🎵 lagu buat menemanimu';
     sw.appendChild(sl);
-    data.songs.forEach(s => {
+    data.songs.forEach(s=>{
       const q=encodeURIComponent(s.youtube_query||(s.title+' '+s.artist+' slowed reverb'));
-      const c=document.createElement('div'); c.className='song-card';
+      const c=document.createElement('div');c.className='song-card';
       c.innerHTML='<div class="song-thumb">🎵</div><div class="song-info"><div class="song-title">'+s.title+'</div><div class="song-artist">'+s.artist+'</div><div class="song-version">'+(s.version||'slowed + reverb')+'</div></div><div class="song-btns"><a href="https://music.youtube.com/search?q='+q+'" target="_blank" class="song-btn">▶</a><a href="https://www.tiktok.com/search/video?q='+q+'" target="_blank" class="song-btn" style="font-size:8px">TT</a><a href="https://open.spotify.com/search/'+q+'" target="_blank" class="song-btn sp">♪</a></div>';
       sw.appendChild(c);
     });
     w.appendChild(sw);
   }
-  chat.appendChild(w); scrollDown();
+  chat.appendChild(w);scrollDown();
 }
 
-async function send() {
+function addTyping(){
+  const w=document.createElement('div');w.className='message ai';
+  const l=document.createElement('div');l.className='sender-label';l.textContent='raina';
+  const b=document.createElement('div');b.className='typing-bubble';
+  b.innerHTML='<div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div>';
+  w.appendChild(l);w.appendChild(b);chat.appendChild(w);scrollDown();return w;
+}
+
+async function send(){
   const text=input.value.trim();
-  if (!text||sendBtn.disabled) return;
-  const key=getKey(); if(!key){showSetup();return;}
-  const welcome=chat.querySelector('.welcome'); if(welcome) welcome.remove();
-  input.value=''; input.style.height='auto'; sendBtn.disabled=true;
-  addMsg('user',text); history.push({role:'user',content:text});
+  if(!text||sendBtn.disabled)return;
+  const key=getKey();if(!key){showSetup();return;}
+  const welcome=chat.querySelector('.welcome');if(welcome)welcome.remove();
+  input.value='';input.style.height='auto';sendBtn.disabled=true;
+  addMsgEl('user',text);
+  history.push({role:'user',content:text});
   const typing=addTyping();
   await new Promise(r=>setTimeout(r,1000+Math.random()*800));
-  try {
+  try{
     const res=await fetch('https://openrouter.ai/api/v1/chat/completions',{
       method:'POST',
       headers:{'Authorization':'Bearer '+key,'Content-Type':'application/json','HTTP-Referer':'https://sad-ai.app','X-Title':'Sad AI'},
       body:JSON.stringify({model:'openai/gpt-4o-mini',messages:[{role:'system',content:SYSTEM_PROMPT},...history],max_tokens:1000,temperature:0.85})
     });
-    if (res.status===401){typing.remove();addMsg('ai','... API key tidak valid. Ketuk 🔑 untuk ganti.');sendBtn.disabled=false;return;}
+    if(res.status===401){typing.remove();addMsgEl('ai','... API key tidak valid. Ketuk 🔑 untuk ganti.');sendBtn.disabled=false;return;}
     const result=await res.json();
     const raw=result.choices[0].message.content;
     let parsed;
     try{const m=raw.match(/\{[\s\S]*\}/);parsed=JSON.parse(m?m[0]:raw);}
     catch{parsed={message:raw,songs:[]};}
-    typing.remove(); addAI(parsed);
-    history.push({role:'assistant',content:parsed.message});
-  } catch { typing.remove(); addMsg('ai','... aku kehilangan sinyal sebentar. coba lagi?'); }
-  sendBtn.disabled=false; input.focus();
+    typing.remove();addAIEl(parsed);
+    history.push({role:'assistant',content:JSON.stringify(parsed)});
+    saveCurrentSession();
+  }catch{typing.remove();addMsgEl('ai','... aku kehilangan sinyal sebentar. coba lagi?');}
+  sendBtn.disabled=false;input.focus();
 }
 
 input.addEventListener('input',()=>{input.style.height='auto';input.style.height=Math.min(input.scrollHeight,100)+'px';});
