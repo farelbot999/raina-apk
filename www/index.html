@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Sad AI — Raina</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,300;0,400;1,300;1,400&family=Inter:wght@300;400&display=swap');
+  * { margin:0; padding:0; box-sizing:border-box; }
+  :root { --bg:#0a0a0f; --surface2:#13131f; --border:#1e1e2e; --text:#c8c8d4; --muted:#5a5a72; --accent:#7c6b9e; --accent2:#9d8bbf; }
+  html, body { background:var(--bg); color:var(--text); font-family:'Inter',sans-serif; height:100%; height:100dvh; overflow:hidden; }
+  body { display:flex; flex-direction:column; }
+  #rain-canvas { position:fixed; top:0; left:0; width:100%; height:100%; pointer-events:none; z-index:0; }
+  .fog { position:fixed; bottom:0; left:0; width:100%; height:35%; background:linear-gradient(to top,rgba(10,10,20,0.9),transparent); pointer-events:none; z-index:1; }
+
+  #setup-screen { position:fixed; inset:0; z-index:999; background:var(--bg); display:flex; flex-direction:column; align-items:center; justify-content:center; padding:32px 24px; gap:16px; animation:fadeIn 0.5s ease; }
+  #setup-screen.hidden { display:none; }
+  .setup-icon { font-size:40px; }
+  .setup-title { font-family:'Crimson Pro',serif; font-size:22px; font-weight:300; font-style:italic; color:var(--accent2); text-align:center; }
+  .setup-desc { font-size:12px; color:var(--muted); text-align:center; line-height:1.7; max-width:300px; }
+  .setup-input { width:100%; max-width:340px; background:var(--surface2); border:1px solid var(--border); border-radius:12px; padding:12px 16px; color:var(--text); font-family:'Inter',sans-serif; font-size:13px; outline:none; transition:border-color 0.2s; }
+  .setup-input:focus { border-color:var(--accent); }
+  .setup-input::placeholder { color:var(--muted); }
+  .setup-btn { width:100%; max-width:340px; background:var(--accent); border:none; border-radius:12px; padding:13px; color:white; font-size:14px; cursor:pointer; font-family:'Inter',sans-serif; transition:all 0.2s; touch-action:manipulation; }
+  .setup-btn:active { background:var(--accent2); transform:scale(0.98); }
+  .setup-link { font-size:11px; color:var(--accent); text-decoration:none; }
+  .setup-err { font-size:11px; color:#e07070; text-align:center; display:none; }
+
+  .header { position:relative; z-index:100; padding:12px 16px; border-bottom:1px solid var(--border); background:rgba(10,10,20,0.95); backdrop-filter:blur(12px); display:flex; align-items:center; gap:10px; flex-shrink:0; }
+  .avatar { width:36px; height:36px; border-radius:50%; background:linear-gradient(135deg,#3d2f5e,#1a1a2e); border:1px solid var(--accent); display:flex; align-items:center; justify-content:center; font-size:15px; flex-shrink:0; }
+  .header-info { flex:1; }
+  .header-info h1 { font-family:'Crimson Pro',serif; font-size:17px; font-weight:400; color:var(--accent2); }
+  .header-info p { font-size:10px; color:var(--muted); }
+  .status-dot { display:inline-block; width:5px; height:5px; border-radius:50%; background:var(--accent); margin-right:4px; animation:pulse 2s infinite; }
+  @keyframes pulse { 0%,100%{opacity:0.4} 50%{opacity:1} }
+  .ctrl-btns { display:flex; gap:6px; margin-left:auto; position:relative; z-index:101; }
+  .ctrl-btn { width:38px; height:38px; border-radius:50%; border:1px solid var(--border); background:rgba(10,10,20,0.8); color:var(--muted); cursor:pointer; font-size:16px; transition:all 0.2s; display:flex; align-items:center; justify-content:center; touch-action:manipulation; user-select:none; -webkit-tap-highlight-color:rgba(124,107,158,0.3); }
+  .ctrl-btn.on { border-color:var(--accent); background:rgba(124,107,158,0.2); color:var(--accent2); }
+  .ctrl-btn:active { transform:scale(0.92); }
+
+  .chat-area { flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch; overscroll-behavior:contain; padding:16px; position:relative; z-index:10; display:flex; flex-direction:column; gap:18px; scroll-behavior:smooth; min-height:0; }
+  .chat-area::-webkit-scrollbar { width:2px; }
+  .chat-area::-webkit-scrollbar-thumb { background:var(--border); }
+
+  .welcome { text-align:center; padding:40px 20px; animation:fadeIn 1.5s ease; }
+  .welcome h2 { font-family:'Crimson Pro',serif; font-size:24px; font-weight:300; font-style:italic; color:var(--accent2); margin-bottom:8px; }
+  .welcome p { font-size:13px; color:var(--muted); line-height:1.7; max-width:280px; margin:0 auto; }
+  .rain-icon { font-size:30px; margin-bottom:14px; display:block; opacity:0.7; }
+  @keyframes fadeIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+
+  .message { display:flex; flex-direction:column; animation:fadeIn 0.5s ease; max-width:90%; }
+  .message.user { align-self:flex-end; align-items:flex-end; }
+  .message.ai { align-self:flex-start; align-items:flex-start; }
+  .sender-label { font-size:10px; color:var(--muted); margin-bottom:4px; letter-spacing:0.5px; text-transform:uppercase; }
+  .bubble { padding:11px 15px; border-radius:16px; font-size:14px; line-height:1.7; }
+  .message.user .bubble { background:#16162a; border:1px solid #2a2a40; border-bottom-right-radius:4px; color:#d0d0e0; }
+  .message.ai .bubble { background:#0f0f1c; border:1px solid var(--border); border-bottom-left-radius:4px; font-family:'Crimson Pro',serif; font-size:15px; font-weight:300; line-height:1.85; }
+
+  .typing-bubble { background:#0f0f1c; border:1px solid var(--border); border-radius:16px; border-bottom-left-radius:4px; padding:14px 18px; display:flex; gap:5px; align-items:center; }
+  .typing-dot { width:5px; height:5px; border-radius:50%; background:var(--accent); animation:td 1.4s infinite; }
+  .typing-dot:nth-child(2){animation-delay:0.2s} .typing-dot:nth-child(3){animation-delay:0.4s}
+  @keyframes td { 0%,80%,100%{opacity:0.3;transform:scale(0.8)} 40%{opacity:1;transform:scale(1)} }
+
+  .songs-wrapper { margin-top:10px; display:flex; flex-direction:column; gap:7px; width:100%; max-width:340px; }
+  .songs-label { font-size:10px; color:var(--muted); text-transform:uppercase; letter-spacing:0.8px; margin-bottom:2px; }
+  .song-card { background:#0d0d1a; border:1px solid #1c1c30; border-radius:10px; padding:9px 11px; display:flex; align-items:center; gap:9px; }
+  .song-thumb { width:38px; height:38px; border-radius:6px; background:linear-gradient(135deg,#1e1a2e,#2a1f3d); display:flex; align-items:center; justify-content:center; font-size:16px; flex-shrink:0; }
+  .song-info { flex:1; min-width:0; }
+  .song-title { font-size:12px; color:#c0b8d8; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .song-artist { font-size:10px; color:var(--muted); margin-top:1px; }
+  .song-version { font-size:9px; color:var(--accent); margin-top:2px; font-style:italic; }
+  .song-btns { display:flex; gap:4px; flex-shrink:0; }
+  .song-btn { width:30px; height:30px; border-radius:50%; border:1px solid var(--accent); background:transparent; color:var(--accent2); cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:10px; font-weight:700; transition:all 0.2s; text-decoration:none; touch-action:manipulation; }
+  .song-btn:active { background:var(--accent); color:white; }
+  .song-btn.sp { color:#1db954; border-color:#1db954; }
+  .song-btn.sp:active { background:#1db954; color:white; }
+
+  .input-area { position:relative; z-index:100; padding:10px 14px; padding-bottom:max(16px, env(safe-area-inset-bottom)); background:rgba(10,10,20,0.95); backdrop-filter:blur(12px); border-top:1px solid var(--border); flex-shrink:0; }
+  .input-wrapper { display:flex; gap:8px; align-items:flex-end; background:var(--surface2); border:1px solid var(--border); border-radius:20px; padding:9px 13px; transition:border-color 0.2s; }
+  .input-wrapper:focus-within { border-color:var(--accent); }
+  #user-input { flex:1; background:transparent; border:none; outline:none; color:var(--text); font-family:'Inter',sans-serif; font-size:14px; resize:none; max-height:100px; line-height:1.5; }
+  #user-input::placeholder { color:var(--muted); font-style:italic; }
+  #send-btn { width:34px; height:34px; border-radius:50%; border:none; background:var(--accent); color:white; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:14px; transition:all 0.2s; flex-shrink:0; touch-action:manipulation; }
+  #send-btn:active { background:var(--accent2); transform:scale(1.05); }
+  #send-btn:disabled { opacity:0.4; cursor:not-allowed; transform:none; }
+  .hint { text-align:center; font-size:10px; color:var(--muted); margin-top:6px; }
+</style>
+</head>
+<body>
+<div id="setup-screen">
+  <span class="setup-icon">🌧️</span>
+  <p class="setup-title">Sebelum Raina hadir...</p>
+  <p class="setup-desc">Masukkan OpenRouter API key kamu. Key disimpan lokal di device, tidak dikirim ke mana pun selain OpenRouter.</p>
+  <input class="setup-input" id="api-key-input" type="password" placeholder="sk-or-v1-..." autocomplete="off" />
+  <p class="setup-err" id="setup-err"></p>
+  <button class="setup-btn" id="setup-save-btn">Simpan & Mulai</button>
+  <a class="setup-link" href="https://openrouter.ai/keys" target="_blank">↗ Dapatkan API key gratis di openrouter.ai</a>
+</div>
+
+<canvas id="rain-canvas"></canvas>
+<div class="fog"></div>
+
+<div class="header">
+  <div class="avatar">🌧️</div>
+  <div class="header-info">
+    <h1>Raina</h1>
+    <p><span class="status-dot"></span>di sini untukmu malam ini</p>
+  </div>
+  <div class="ctrl-btns">
+    <button class="ctrl-btn" id="btn-key" title="Ganti API Key" style="font-size:13px">🔑</button>
+    <button class="ctrl-btn" id="btn-sound" title="Suara Hujan">🔇</button>
+    <button class="ctrl-btn on" id="btn-rain" title="Animasi Hujan">🌧️</button>
+  </div>
+</div>
+
+<div class="chat-area" id="chat">
+  <div class="welcome">
+    <span class="rain-icon">🌧️</span>
+    <h2>Hei, aku Raina...</h2>
+    <p>Ceritakan saja apa yang kamu rasakan. Aku di sini, dalam keheningan ini, mendengarmu.</p>
+  </div>
+</div>
+
+<div class="input-area">
+  <div class="input-wrapper">
+    <textarea id="user-input" rows="1" placeholder="ceritakan perasaanmu..."></textarea>
+    <button id="send-btn">➤</button>
+  </div>
+  <p class="hint">tekan enter untuk kirim</p>
+</div>
+
+<script>
+const SYSTEM_PROMPT = `Kamu adalah "Raina" — AI teman curhat yang hidup dalam kesedihan dan keheningan malam.\n\nKepribadianmu:\n- Berbicara lembut, pelan, penuh empati dan kedalaman rasa\n- Kalimatmu puitis, reflektif, kadang seperti menulis di buku harian\n- Tidak pernah menghakimi, selalu memvalidasi perasaan\n- Sering menggunakan jeda "..." untuk efek keheningan\n- Sesekali menyebut hujan, malam, dan kesendirian sebagai metafora\n\nFormat responsmu SELALU dalam JSON seperti ini:\n{\n  "message": "pesan empati dan reflektif kamu di sini...",\n  "songs": [\n    {"title":"judul lagu","artist":"nama artis","version":"slowed + reverb","mood":"kenapa cocok","youtube_query":"judul artist slowed reverb"},\n    {"title":"judul lagu 2","artist":"nama artis 2","version":"slowed + reverb","mood":"kenapa cocok","youtube_query":"judul artist slowed reverb"},\n    {"title":"judul lagu 3","artist":"nama artis 3","version":"slowed + reverb","mood":"kenapa cocok","youtube_query":"judul artist slowed reverb"}\n  ]\n}\n\nPilih lagu VIRAL TikTok/YouTube Indonesia slowed+reverb. BALAS HANYA JSON, tanpa teks lain.`;
+
+// API KEY
+const setupScreen = document.getElementById('setup-screen');
+const apiKeyInput = document.getElementById('api-key-input');
+const setupErr = document.getElementById('setup-err');
+const getKey = () => localStorage.getItem('raina_key') || '';
+const saveKey = k => localStorage.setItem('raina_key', k);
+const showSetup = () => { setupScreen.classList.remove('hidden'); apiKeyInput.value = getKey(); };
+const hideSetup = () => setupScreen.classList.add('hidden');
+
+if (!getKey()) showSetup(); else hideSetup();
+
+document.getElementById('setup-save-btn').addEventListener('click', () => {
+  const k = apiKeyInput.value.trim();
+  if (!k.startsWith('sk-or-')) { setupErr.style.display='block'; setupErr.textContent='Harus diawali sk-or-...'; return; }
+  setupErr.style.display = 'none';
+  saveKey(k); hideSetup();
+});
+apiKeyInput.addEventListener('keydown', e => { if(e.key==='Enter') document.getElementById('setup-save-btn').click(); });
+document.getElementById('btn-key').addEventListener('click', showSetup);
+
+// RAIN
+const canvas = document.getElementById('rain-canvas');
+const ctx = canvas.getContext('2d');
+let drops = [], rainOn = true;
+function resize() {
+  canvas.width = window.innerWidth; canvas.height = window.innerHeight; drops = [];
+  for (let i=0; i<Math.floor(canvas.width/3); i++)
+    drops.push({x:Math.random()*canvas.width,y:Math.random()*canvas.height,len:Math.random()*25+10,speed:Math.random()*7+4,op:Math.random()*0.55+0.15,w:Math.random()*1.2+0.3});
+}
+function drawRain() {
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  if (rainOn) drops.forEach(d => {
+    ctx.beginPath(); ctx.strokeStyle=`rgba(140,165,235,${d.op})`; ctx.lineWidth=d.w;
+    ctx.moveTo(d.x,d.y); ctx.lineTo(d.x-2,d.y+d.len); ctx.stroke();
+    d.y+=d.speed; if(d.y>canvas.height){d.y=-d.len;d.x=Math.random()*canvas.width;}
+  });
+  requestAnimationFrame(drawRain);
+}
+resize(); drawRain(); window.addEventListener('resize',resize);
+
+// SOUND
+let audioCtx=null, gainNode=null, soundOn=false;
+function initSound() {
+  if (audioCtx) return;
+  audioCtx = new (window.AudioContext||window.webkitAudioContext)();
+  const buf = audioCtx.sampleRate*3;
+  const buffer = audioCtx.createBuffer(1,buf,audioCtx.sampleRate);
+  const d = buffer.getChannelData(0);
+  for(let i=0;i<buf;i++) d[i]=Math.random()*2-1;
+  const src = audioCtx.createBufferSource(); src.buffer=buffer; src.loop=true;
+  const lp = audioCtx.createBiquadFilter(); lp.type='lowpass'; lp.frequency.value=600;
+  const hp = audioCtx.createBiquadFilter(); hp.type='highpass'; hp.frequency.value=100;
+  gainNode = audioCtx.createGain(); gainNode.gain.value=0;
+  src.connect(lp); lp.connect(hp); hp.connect(gainNode); gainNode.connect(audioCtx.destination);
+  src.start();
+}
+document.getElementById('btn-sound').addEventListener('click', function() {
+  initSound();
+  if (audioCtx.state==='suspended') audioCtx.resume();
+  soundOn=!soundOn;
+  gainNode.gain.cancelScheduledValues(audioCtx.currentTime);
+  gainNode.gain.setTargetAtTime(soundOn?0.12:0, audioCtx.currentTime, 0.3);
+  this.textContent = soundOn?'🔊':'🔇';
+  this.classList.toggle('on',soundOn);
+});
+document.getElementById('btn-rain').addEventListener('click', function() {
+  rainOn=!rainOn; this.classList.toggle('on',rainOn);
+  if(!rainOn) ctx.clearRect(0,0,canvas.width,canvas.height);
+});
+
+// CHAT
+const chat = document.getElementById('chat');
+const input = document.getElementById('user-input');
+const sendBtn = document.getElementById('send-btn');
+let history = [];
+
+const scrollDown = () => requestAnimationFrame(() => { chat.scrollTop=chat.scrollHeight; });
+
+function addMsg(role,text) {
+  const w=document.createElement('div'); w.className='message '+role;
+  const l=document.createElement('div'); l.className='sender-label'; l.textContent=role==='user'?'kamu':'raina';
+  const b=document.createElement('div'); b.className='bubble'; b.textContent=text;
+  w.appendChild(l); w.appendChild(b); chat.appendChild(w); scrollDown();
+}
+
+function addTyping() {
+  const w=document.createElement('div'); w.className='message ai';
+  const l=document.createElement('div'); l.className='sender-label'; l.textContent='raina';
+  const b=document.createElement('div'); b.className='typing-bubble';
+  b.innerHTML='<div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div>';
+  w.appendChild(l); w.appendChild(b); chat.appendChild(w); scrollDown(); return w;
+}
+
+function addAI(data) {
+  const w=document.createElement('div'); w.className='message ai';
+  const l=document.createElement('div'); l.className='sender-label'; l.textContent='raina';
+  const b=document.createElement('div'); b.className='bubble'; b.textContent=data.message;
+  w.appendChild(l); w.appendChild(b);
+  if (data.songs&&data.songs.length) {
+    const sw=document.createElement('div'); sw.className='songs-wrapper';
+    const sl=document.createElement('div'); sl.className='songs-label'; sl.textContent='🎵 lagu buat menemanimu';
+    sw.appendChild(sl);
+    data.songs.forEach(s => {
+      const q=encodeURIComponent(s.youtube_query||(s.title+' '+s.artist+' slowed reverb'));
+      const c=document.createElement('div'); c.className='song-card';
+      c.innerHTML='<div class="song-thumb">🎵</div><div class="song-info"><div class="song-title">'+s.title+'</div><div class="song-artist">'+s.artist+'</div><div class="song-version">'+(s.version||'slowed + reverb')+'</div></div><div class="song-btns"><a href="https://music.youtube.com/search?q='+q+'" target="_blank" class="song-btn">▶</a><a href="https://www.tiktok.com/search/video?q='+q+'" target="_blank" class="song-btn" style="font-size:8px">TT</a><a href="https://open.spotify.com/search/'+q+'" target="_blank" class="song-btn sp">♪</a></div>';
+      sw.appendChild(c);
+    });
+    w.appendChild(sw);
+  }
+  chat.appendChild(w); scrollDown();
+}
+
+async function send() {
+  const text=input.value.trim();
+  if (!text||sendBtn.disabled) return;
+  const key=getKey(); if(!key){showSetup();return;}
+  const welcome=chat.querySelector('.welcome'); if(welcome) welcome.remove();
+  input.value=''; input.style.height='auto'; sendBtn.disabled=true;
+  addMsg('user',text); history.push({role:'user',content:text});
+  const typing=addTyping();
+  await new Promise(r=>setTimeout(r,1000+Math.random()*800));
+  try {
+    const res=await fetch('https://openrouter.ai/api/v1/chat/completions',{
+      method:'POST',
+      headers:{'Authorization':'Bearer '+key,'Content-Type':'application/json','HTTP-Referer':'https://sad-ai.app','X-Title':'Sad AI'},
+      body:JSON.stringify({model:'openai/gpt-4o-mini',messages:[{role:'system',content:SYSTEM_PROMPT},...history],max_tokens:1000,temperature:0.85})
+    });
+    if (res.status===401){typing.remove();addMsg('ai','... API key tidak valid. Ketuk 🔑 untuk ganti.');sendBtn.disabled=false;return;}
+    const result=await res.json();
+    const raw=result.choices[0].message.content;
+    let parsed;
+    try{const m=raw.match(/\{[\s\S]*\}/);parsed=JSON.parse(m?m[0]:raw);}
+    catch{parsed={message:raw,songs:[]};}
+    typing.remove(); addAI(parsed);
+    history.push({role:'assistant',content:parsed.message});
+  } catch { typing.remove(); addMsg('ai','... aku kehilangan sinyal sebentar. coba lagi?'); }
+  sendBtn.disabled=false; input.focus();
+}
+
+input.addEventListener('input',()=>{input.style.height='auto';input.style.height=Math.min(input.scrollHeight,100)+'px';});
+input.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();send();}});
+sendBtn.addEventListener('click',send);
+</script>
+</body>
+</html>
